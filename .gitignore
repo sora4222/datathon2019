@@ -9,7 +9,7 @@
 # Remove previous ipynb_checkpoints
 #   git rm -r .ipynb_checkpoints/
 #
-
+phase-01/*
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
