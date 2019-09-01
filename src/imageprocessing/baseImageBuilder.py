@@ -5,6 +5,7 @@ from typing import Tuple, List
 from pathlib import Path
 import re
 import logging
+from src.imageprocessing.imageValue import ImageValue
 
 
 class BaseImageLoader():
@@ -29,9 +30,13 @@ class BaseImageLoader():
 
         self._location = _location
         self._name_glob = name_glob
-        self._all_bands_associated_with_image: List[Tuple[str, str, str, Image.Image]] = list()
+        self._all_bands_associated_with_image: List[ImageValue] = list()
 
-    def get_images(self) -> List[Tuple[str, str, str, Image.Image]]:
+    def get_images(self) -> List[ImageValue]:
+        """
+        Gets the position, date, band, and the images for the subjectImage given
+        :return: position, date, band, and the images
+        """
         if len(self._all_bands_associated_with_image) == 0:
             self._get_all_bands()
 
@@ -57,12 +62,13 @@ class BaseImageLoader():
         date: str = extractor.extract_date()
         position: str = extractor.extract_position()
         loaded_image: Image = self._load_image(image_path)
-        self._all_bands_associated_with_image.append((position, date, band, loaded_image))
+        self._all_bands_associated_with_image.append(ImageValue(loaded_image, position, date, band))
 
     @staticmethod
     def _load_image(image_path):
         logging.debug(f"loading image: {image_path.absolute()}")
-        image = Image.open(image_path)
+        image_loaded: Image = Image.open(image_path)
+        image = image_loaded.convert("RGB")
         return image
 
 
@@ -70,7 +76,7 @@ class PathExtractor():
     logger: Logger
 
     def __init__(self, path: Path):
-        self.subject: str = str(path.name)
+        self.subjectImage: str = str(path.name)
         self.logger: Logger = logging.getLogger("base_image")
 
     def extract_date(self) -> str:
@@ -82,11 +88,21 @@ class PathExtractor():
         return self._extract_pattern("(\d{4}-\d{5})-")
 
     def extract_band(self) -> str:
-        return self._extract_pattern("-(?:(B\d{2})|(TLI))-")
+        self.logger.debug("extracting band")
+        return self._extract_pattern("-(?:(B\d{1,2}\w?)|(T[LC]I))-")
 
     def _extract_pattern(self, pattern: str) -> str:
-        resultant_extraction = re.findall(pattern, self.subject)
-        self.logger.info(f"Resultant value: {resultant_extraction}")
+        resultant_extraction = re.findall(pattern, self.subjectImage)
+
+        self.logger.debug(f"Resultant value: {resultant_extraction}")
         if len(resultant_extraction) == 0:
-            self.logger.info(f"The pattern: [{resultant_extraction}] has resulted in 0 results.")
-        return resultant_extraction[0]
+            self.logger.fatal(f"The pattern: {pattern} has resulted in 0 results for subjectImage: {self.subjectImage}")
+
+        try:
+            return self.remove_empty_strings(resultant_extraction)[0]
+        except IndexError:
+            return resultant_extraction[0]
+
+    @staticmethod
+    def remove_empty_strings(resultant_extraction) -> List[str]:
+        return list(filter(None, resultant_extraction[0]))
