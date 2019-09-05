@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 import logging
 from src.imageprocessing.imageValue import ImageValue
-
+import datetime
 
 class BaseImageLoader():
     """
@@ -22,7 +22,7 @@ class BaseImageLoader():
 
         assert _location is not None and _location, "_location is empty or 'None'"
 
-        self.logger: Logger = logging.getLogger("base_image")
+        self.logger: Logger = logging.getLogger("_base_image")
 
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
@@ -59,7 +59,7 @@ class BaseImageLoader():
     def _extract_information_of_image(self, image_path):
         extractor = PathExtractor(image_path)
         band: str = extractor.extract_band()
-        date: str = extractor.extract_date()
+        date: datetime.datetime = extractor.extract_date()
         position: str = extractor.extract_position()
         loaded_image: Image = self._load_image(image_path)
         self._all_bands_associated_with_image.append(ImageValue(loaded_image, position, date, band))
@@ -77,11 +77,12 @@ class PathExtractor():
 
     def __init__(self, path: Path):
         self.subjectImage: str = str(path.name)
-        self.logger: Logger = logging.getLogger("base_image")
+        self.logger: Logger = logging.getLogger("_base_image")
 
-    def extract_date(self) -> str:
+    def extract_date(self) -> datetime.datetime:
         self.logger.debug("extracting date")
-        return self._extract_pattern("-(\d{4}-\d{2}-\d{2}).png")
+        date = self._extract_pattern("-(\d{4}-\d{2}-\d{2}).png")
+        return datetime.datetime.strptime(date, "%Y-%m-%d")
 
     def extract_position(self) -> str:
         self.logger.debug("extracting position")
@@ -95,12 +96,9 @@ class PathExtractor():
         resultant_extraction = re.findall(pattern, self.subjectImage)
 
         self.logger.debug(f"Resultant value: {resultant_extraction}")
-        if len(resultant_extraction) == 0:
-            self.logger.fatal(f"The pattern: {pattern} has resulted in 0 results for subjectImage: {self.subjectImage}")
-
-        try:
+        if not isinstance(resultant_extraction[0], str):
             return self.remove_empty_strings(resultant_extraction)[0]
-        except IndexError:
+        else:
             return resultant_extraction[0]
 
     @staticmethod
