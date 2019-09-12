@@ -54,9 +54,8 @@ class ImageNormalizer():
 
     def normalize(self) -> List[ImageValue]:
         max_value_in_image: int = self._min_max_band()
-        print(max_value_in_image)
+        print(f"max values in the images: {max_value_in_image}")
         multiplier: int = self._multiplier_to_peak(max_value_in_image)
-        print(multiplier)
         return self._multiply_each_image(multiplier)
 
     def _min_max_band(self) -> int:
@@ -71,7 +70,6 @@ class ImageNormalizer():
         image:ImageValue
         scaled_images: List[ImageValue] = []
         for image in self.images:
-            print(f"type: {type(image.image)}")
             scaled_images.append(ImageValue.fromimage(image, multiplier * image.image))
 
         return scaled_images
