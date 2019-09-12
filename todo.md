@@ -1,6 +1,6 @@
 I want to brighten all the masks but such that they are still relative to
 each other.
-Goal 1: Find the brightest pixel in one band.
+Goal 1: Find the brightest pixel in one band. ----- Done
 convert image into greys
 convert the images into a stream of np.ndarrays
 reduce them to the brightest pixel

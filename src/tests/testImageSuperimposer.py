@@ -1,12 +1,25 @@
-from src.imageprocessing.ImageSuperimposer import ImageSuperimposer
 from PIL import Image
+import src.imageprocessing.imageSuperimposer as img_imposer
+import pathlib
+from src.imageprocessing.imageValue import ImageValue
+import datetime
 
-def test_manual_image_superimposed():
-    base_image = Image.open("C:\\Users\\sora4\\PycharmProjects\\datathon2019\\phase-01\\data\\sentinel-2a-tile-7680x-10240y\\timeseries\\7680-10240-TCI-2016-12-22.png")
-    superImposer = ImageSuperimposer(base_image)
+from typing import List
 
-    map_image = Image.open(
-        "C:\\Users\\sora4\\PycharmProjects\\datathon2019\\phase-01\\data\\sentinel-2a-tile-7680x-10240y\\timeseries\\7680-10240-TCI-2016-12-22.png")
-    image_back = superImposer.superimpose(map_image)
+def test_image_max():
+    white_image: Image = Image.open(pathlib.Path("resources/whiteimage.png").absolute(), "r")
+    black_image: Image = Image.open(pathlib.Path("resources/blackimage.jpg").absolute(), "r")
+    assert 255 == img_imposer.ImageNormalizer._min_max_band([white_image, black_image])
 
-    image_back.show()
+
+def test_image_normalizer():
+    white_image: Image = Image.open(pathlib.Path("resources/whiteimage.png").absolute(), "r")
+    black_image: Image = Image.open(pathlib.Path("resources/blackimage.jpg").absolute(), "r")
+
+    images: List[ImageValue] = [ImageValue(white_image, "a", datetime.datetime.now(), 'asdf'),
+                                ImageValue(white_image, "b", datetime.datetime.now(), "adff")]
+
+    normalizer = img_imposer.ImageNormalizer(images)
+    resultant_images = normalizer.normalize()
+
+    assert images == resultant_images

@@ -1,5 +1,4 @@
 from pathlib import Path
-import logging
 from src.imageprocessing.baseImageBuilder import PathExtractor
 
 def test_image_extractor_extracts_dates():
