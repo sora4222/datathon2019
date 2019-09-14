@@ -7,15 +7,10 @@ import numpy as np
 from typing import List
 import cv2
 
-def test_image_max():
-    white_image: Image = Image.open(pathlib.Path("resources/whiteimage.png").absolute(), "r")
-    black_image: Image = Image.open(pathlib.Path("resources/blackimage.jpg").absolute(), "r")
-    assert 255 == img_imposer.ImageNormalizer._min_max_band([white_image, black_image])
-
 
 def test_image_normalizer():
     white_image: Image = Image.open(pathlib.Path("resources/whiteimage.png").absolute(), "r")
-    black_image: Image = Image.open(pathlib.Path("resources/blackimage.jpg").absolute(), "r")
+    black_image: Image = Image.open(pathlib.Path("resources/blackimage.png").absolute(), "r")
 
     max_in_black = np.amax(np.array(black_image))
     print(f"Before black: {max_in_black}")
@@ -28,4 +23,20 @@ def test_image_normalizer():
     print(f"Resultant black{np.amax(resultant_images[0].image)}")
     print(f"Resultant white{np.amax(resultant_images[0].image)}")
 
-    assert np.amax(np.array(black_image)) == np.max(resultant_images[0].image)
+    assert np.all(resultant_images[0].image == 0)
+    assert np.all(resultant_images[1].image == 255)
+
+
+def test_image_normalizer_black_only():
+    black_image: Image = Image.open(pathlib.Path("resources/blackimage.png").absolute(), "r")
+    print(np.max(cv2.cvtColor(np.array(black_image), cv2.COLOR_BGRA2GRAY)))
+    max_in_black = np.amax(np.array(black_image))
+    print(f"Before black: {max_in_black}")
+
+    images: List[ImageValue] = [ImageValue(black_image, "a", datetime.datetime.now(), 'asdf')]
+
+    normalizer = img_imposer.ImageNormalizer(images)
+    resultant_images = normalizer.normalize()
+    print(f"Resultant black{np.amax(resultant_images[0].image)}")
+
+    assert 0 == np.max(resultant_images[0].image)
